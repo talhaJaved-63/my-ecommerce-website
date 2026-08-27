@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Order — Maison Velvet</title>
+  <meta name="description" content="Follow your Maison Velvet order from confirmation to delivery.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23161513'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23efe9df' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<main id="main">
+  <div class="page container">
+    <header class="page-head reveal visible">
+      <p class="kicker">Guest Services</p>
+      <h1 class="page-title">Track Your Order</h1>
+    </header>
+
+    <div class="panel" style="max-width:720px">
+      <h2>Order Lookup</h2>
+      <p class="shop-meta" style="margin-bottom:1.4rem">
+        Enter the order number from your confirmation email together with the email address used at checkout.
+      </p>
+      <form class="form-grid" id="track-form" novalidate>
+        <div class="field">
+          <label for="track-number">Order Number</label>
+          <input class="input" type="text" id="track-number" name="number" placeholder="MV-XXXXXX-XXX" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="track-email">Email Address</label>
+          <input class="input" type="email" id="track-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <p class="form-msg span-2" id="track-msg" role="alert" aria-live="polite"></p>
+        <button type="submit" class="btn btn-solid span-2">Track Order</button>
+      </form>
+    </div>
+
+    <div id="track-result" class="track-result" style="margin-top:2.5rem" hidden></div>
+  </div>
+</main>
+
+<script src="/js/core.js"></script>
+<script src="/js/pages/track.js"></script>
+</body>
+</html>

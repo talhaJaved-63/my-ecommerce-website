@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Sign In — Maison Velvet</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23161513'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23efe9df' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <p class="login-brand">Maison Velvet<small>Atelier Console</small></p>
+    <p class="login-tag">Staff Access Only</p>
+
+    <form class="login-form" id="admin-login-form" novalidate>
+      <div class="field">
+        <label for="al-email">Email</label>
+        <input class="input" type="email" id="al-email" name="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="al-password">Password</label>
+        <input class="input" type="password" id="al-password" name="password" autocomplete="current-password" required>
+      </div>
+      <p class="form-msg err" id="al-msg" role="alert" aria-live="polite"></p>
+      <button type="submit" class="btn btn-solid">Sign In to Console</button>
+    </form>
+
+    <p class="login-alt"><a href="/">← Back to storefront</a></p>
+  </div>
+</div>
+
+<script src="/js/admin/admin.js" defer></script>
+</body>
+</html>

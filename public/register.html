@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — Maison Velvet</title>
+<meta name="description" content="Create a Maison Velvet account for faster checkout, order tracking and wishlist.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23161513'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23efe9df' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<main id="main">
+  <div class="page container">
+    <div class="auth-wrap">
+      <p class="kicker">Join The House</p>
+      <h1 style="margin-top:.6rem">Create Account</h1>
+      <p class="auth-sub">Faster checkout, order tracking and a permanent wishlist.</p>
+
+      <form class="auth-form" id="register-form" novalidate>
+        <div class="field">
+          <label for="reg-name">Full Name</label>
+          <input class="input" type="text" id="reg-name" name="name" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="reg-email">Email Address</label>
+          <input class="input" type="email" id="reg-email" name="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="reg-password">Password</label>
+          <input class="input" type="password" id="reg-password" name="password" autocomplete="new-password" minlength="8" required>
+          <span class="field-hint">Minimum 8 characters.</span>
+        </div>
+        <p class="form-msg" id="auth-msg" role="alert" aria-live="polite"></p>
+        <button type="submit" class="btn btn-solid btn-block">Create Account</button>
+      </form>
+
+      <p class="auth-alt">Already have an account? <a href="/login.html" id="to-login">Sign in</a></p>
+    </div>
+  </div>
+</main>
+
+<script src="/js/core.js"></script>
+<script src="/js/pages/auth.js"></script>
+</body>
+</html>

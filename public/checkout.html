@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Maison Velvet</title>
+<meta name="description" content="Secure checkout — Maison Velvet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23161513'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23efe9df' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<main id="main">
+  <div class="page container" id="checkout-root">
+    <header class="page-head reveal visible">
+      <p class="kicker">Secure Checkout</p>
+      <h1 class="page-title">Checkout</h1>
+    </header>
+
+    <div class="checkout-layout">
+      <div>
+        <section class="panel">
+          <h2>Contact &amp; Delivery</h2>
+          <form id="co-form" class="form-grid" novalidate>
+            <div class="field span-2">
+              <label for="co-name">Full Name *</label>
+              <input class="input" id="co-name" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="co-email">Email Address *</label>
+              <input class="input" type="email" id="co-email" autocomplete="email" required>
+            </div>
+            <div class="field">
+              <label for="co-phone">Phone</label>
+              <input class="input" type="tel" id="co-phone" autocomplete="tel">
+            </div>
+            <div class="field span-2">
+              <label for="co-address1">Address Line 1 *</label>
+              <input class="input" id="co-address1" autocomplete="address-line1" required>
+            </div>
+            <div class="field span-2">
+              <label for="co-address2">Address Line 2</label>
+              <input class="input" id="co-address2" autocomplete="address-line2">
+            </div>
+            <div class="field">
+              <label for="co-city">City *</label>
+              <input class="input" id="co-city" autocomplete="address-level2" required>
+            </div>
+            <div class="field">
+              <label for="co-region">State / Region</label>
+              <input class="input" id="co-region" autocomplete="address-level1">
+            </div>
+            <div class="field">
+              <label for="co-postal">Postal Code *</label>
+              <input class="input" id="co-postal" autocomplete="postal-code" required>
+            </div>
+            <div class="field">
+              <label for="co-country">Country *</label>
+              <input class="input" id="co-country" autocomplete="country-name" required>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Payment</h2>
+          <div id="payment-area"><p class="grid-empty">Preparing secure payment…</p></div>
+          <p class="form-msg" id="pay-msg" role="alert" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <aside class="panel" id="co-summary" aria-label="Order summary">
+        <h2>Order Summary</h2>
+        <div id="summary-lines"><p class="grid-empty">Reviewing your bag…</p></div>
+        <div id="summary-totals"></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<script src="/js/core.js"></script>
+<script src="/js/pages/checkout.js"></script>
+</body>
+</html>

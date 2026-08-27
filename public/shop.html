@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop the Collection — Maison Velvet</title>
+<meta name="description" content="Explore the Maison Velvet collection — timeless essentials and statement pieces.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23161513'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23efe9df' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<main id="main">
+  <div class="page container">
+    <header class="page-head reveal visible">
+      <p class="kicker">The Collection</p>
+      <h1 class="page-title" id="shop-title">All Pieces</h1>
+    </header>
+    <nav class="chips" id="shop-chips" aria-label="Filter categories"></nav>
+    <div class="shop-bar">
+      <span class="shop-meta" id="shop-count"></span>
+      <label class="shop-meta">Sort
+        <select class="select" id="shop-sort">
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price · Low to High</option>
+          <option value="price-desc">Price · High to Low</option>
+          <option value="rating">Top Rated</option>
+        </select>
+      </label>
+    </div>
+    <div class="products-grid" id="shop-grid" style="margin-top:0"></div>
+  </div>
+</main>
+
+<script src="/js/core.js"></script>
+<script src="/js/pages/shop.js"></script>
+</body>
+</html>

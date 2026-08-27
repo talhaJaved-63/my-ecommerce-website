@@ -1,0 +1,24 @@
+{
+  "name": "maison-velvet",
+  "version": "1.0.0",
+  "description": "Maison Velvet — production e-commerce storefront and admin platform",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.1",
+    "stripe": "^18.4.0"
+  }
+}
