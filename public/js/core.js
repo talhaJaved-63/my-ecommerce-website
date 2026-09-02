@@ -78,7 +78,7 @@
       <button class="icon-btn hamburger" id="menu-open" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
-      <a href="/" class="logo">Maison Velvet<small>Paris</small></a>
+      <a href="/" class="logo">Maison Velvet</a>
       <nav class="nav-links" aria-label="Primary">
         <a class="nav-link" href="/">Home</a>
         <a class="nav-link" href="/#new-arrivals">New Arrivals</a>
@@ -111,7 +111,7 @@
     <div class="container foot-grid">
       <div class="foot-brand">
         <a href="/" class="logo logo-light">Maison Velvet</a>
-        <p>A modern luxury fashion house crafting timeless essentials and considered statement pieces — designed in Paris, made to last.</p>
+        <p>A modern luxury fashion house crafting timeless essentials and considered statement pieces — made to last.</p>
         <div class="social-row">
           <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg></a>
           <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M13.5 21v-7h2.4l.4-2.8h-2.8V9.4c0-.8.3-1.4 1.5-1.4h1.4V5.5c-.3 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5v2.3H8.5V14H11v7h2.5Z"/></svg></a>
@@ -164,7 +164,7 @@
       </div>
     </div>
     <div class="container foot-bottom">
-      <p>© <span id="year">2026</span> Maison Velvet Paris. All rights reserved.</p>
+      <p>© <span id="year">2026</span> Maison Velvet. All rights reserved.</p>
       <ul class="legal">
         <li><a href="#">Privacy Policy</a></li>
         <li><a href="#">Terms &amp; Conditions</a></li>
@@ -241,7 +241,7 @@
   const PLACEHOLDER =
     "data:image/svg+xml," +
     encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><rect width='100%' height='100%' fill='#ece5d8'/><text x='50%' y='51%' text-anchor='middle' font-family='Georgia' font-size='34' letter-spacing='8' fill='#a58a5f'>MAISON VELVET</text></svg>`
+      `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><rect width='100%' height='100%' fill='#ece5d8'/><text x='50%' y='51%' text-anchor='middle' font-family='Georgia' font-size='34' letter-spacing='8' fill='#a58a5f'>MAISON VELVET</text></svg>`,
     );
   document.addEventListener(
     "error",
@@ -252,7 +252,7 @@
         t.src = PLACEHOLDER;
       }
     },
-    true
+    true,
   );
 
   /* ---------------------------------- cart ---------------------------------- */
@@ -273,7 +273,14 @@
       clearTimeout(syncTimer);
       syncTimer = setTimeout(async () => {
         try {
-          await MV.api.put("/api/cart", { items: MV.cart.map(({ productId, qty, size, color }) => ({ productId, qty, size, color })) });
+          await MV.api.put("/api/cart", {
+            items: MV.cart.map(({ productId, qty, size, color }) => ({
+              productId,
+              qty,
+              size,
+              color,
+            })),
+          });
         } catch {}
       }, 400);
     }
@@ -283,7 +290,8 @@
     const found = MV.cart.find((i) => cartKey(i) === cartKey(item));
     if (found) found.qty = Math.min(found.qty + item.qty, 20);
     else MV.cart.push({ ...item });
-    if (found && found.qty > (found.maxStock ?? Infinity)) found.qty = found.maxStock;
+    if (found && found.qty > (found.maxStock ?? Infinity))
+      found.qty = found.maxStock;
     persistCart();
     MV.emit("cart");
     if (!silent) MV.toast(`${item.name} added to bag`);
@@ -349,7 +357,8 @@
   }
 
   function updateShipBar(subtotalCents) {
-    $("#ship-fill").style.width = `${Math.min((subtotalCents / FREE_AT) * 100, 100)}%`;
+    $("#ship-fill").style.width =
+      `${Math.min((subtotalCents / FREE_AT) * 100, 100)}%`;
     $("#ship-msg").textContent =
       subtotalCents >= FREE_AT
         ? "You’ve unlocked complimentary shipping ✦"
@@ -375,7 +384,9 @@
     id = Number(id);
     if (MV.user) {
       try {
-        const res = await MV.api.post("/api/wishlist/toggle", { productId: id });
+        const res = await MV.api.post("/api/wishlist/toggle", {
+          productId: id,
+        });
         res.active ? MV.wish.add(id) : MV.wish.delete(id);
       } catch {}
     } else {
@@ -386,7 +397,11 @@
     }
     updateBadges();
     MV.emit("wish");
-    MV.toast(MV.wish.has(id) ? `${name || "Piece"} saved to wishlist` : `${name || "Piece"} removed from wishlist`);
+    MV.toast(
+      MV.wish.has(id)
+        ? `${name || "Piece"} saved to wishlist`
+        : `${name || "Piece"} removed from wishlist`,
+    );
   };
 
   /* --------------------------------- badges --------------------------------- */
@@ -442,10 +457,14 @@
     openPanel($("#mobile-menu"));
   });
   $("#cart-open").addEventListener("click", () => openPanel($("#cart-drawer")));
-  $("#search-open").addEventListener("click", () => openModal($("#search-modal")));
+  $("#search-open").addEventListener("click", () =>
+    openModal($("#search-modal")),
+  );
   $("#search-close").addEventListener("click", closeAll);
   $$("[data-close]").forEach((b) => b.addEventListener("click", closeAll));
-  $$(".menu-links a, .menu-meta a").forEach((a) => a.addEventListener("click", closeAll));
+  $$(".menu-links a, .menu-meta a").forEach((a) =>
+    a.addEventListener("click", closeAll),
+  );
 
   /* --------------------------------- search --------------------------------- */
 
@@ -465,7 +484,7 @@
               <span class="ri-meta">${p.category?.name || ""}${p.badge ? " · " + p.badge : ""}</span>
               <span class="ri-price">${MV.money(MV.effectivePriceCents(p))}</span>
             </span>
-          </a>`
+          </a>`,
           )
           .join("")
       : `<p class="search-empty">No pieces found for “${q}”.</p>`;
@@ -480,7 +499,9 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(async () => {
       try {
-        const data = await MV.api.get(`/api/products?q=${encodeURIComponent(q)}&limit=6`);
+        const data = await MV.api.get(
+          `/api/products?q=${encodeURIComponent(q)}&limit=6`,
+        );
         renderSearchResults(data.products, q);
       } catch {
         searchResults.innerHTML = `<p class="search-empty">Search is unavailable right now.</p>`;
@@ -494,7 +515,7 @@
       searchInput.value = t.textContent;
       runSearch(t.textContent);
       searchInput.focus();
-    })
+    }),
   );
 
   /* ------------------------------- newsletter ------------------------------- */
@@ -524,7 +545,8 @@
         msgEl.className = "nl-msg err";
         return;
       }
-      msgEl.textContent = "Thank you — you’re on the list. Welcome to Maison Velvet.";
+      msgEl.textContent =
+        "Thank you — you’re on the list. Welcome to Maison Velvet.";
       msgEl.className = "nl-msg ok";
       nlForm.reset();
     });
@@ -539,9 +561,11 @@
       header.classList.toggle("scrolled", window.scrollY > 8);
       toTop.classList.toggle("show", window.scrollY > 650);
     },
-    { passive: true }
+    { passive: true },
   );
-  toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  toTop.addEventListener("click", () =>
+    window.scrollTo({ top: 0, behavior: "smooth" }),
+  );
 
   /* ------------------------------ reveal on scroll --------------------------- */
 
@@ -553,17 +577,19 @@
           io.unobserve(en.target);
         }
       }),
-    { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
   );
 
-  MV.observeReveals = (root = document) => $$(".reveal:not(.visible)", root).forEach((el) => io.observe(el));
+  MV.observeReveals = (root = document) =>
+    $$(".reveal:not(.visible)", root).forEach((el) => io.observe(el));
   MV.observeReveals();
 
   /* ------------------------------ card renderer ------------------------------ */
 
   MV.starsHTML = (rating) => {
     let out = "";
-    for (let i = 1; i <= 5; i++) out += `<span class="star${i <= Math.round(rating) ? " on" : ""}">★</span>`;
+    for (let i = 1; i <= 5; i++)
+      out += `<span class="star${i <= Math.round(rating) ? " on" : ""}">★</span>`;
     return `<span class="stars" aria-hidden="true">${out}</span>`;
   };
 
@@ -571,9 +597,19 @@
     const price = MV.effectivePriceCents(p);
     const soldOut = p.stock <= 0;
     const badges = [];
-    if (p.salePriceCents) badges.push(`<span class="badge saleb">-${Math.round((1 - p.salePriceCents / p.priceCents) * 100)}%</span>`);
+    if (p.salePriceCents)
+      badges.push(
+        `<span class="badge saleb">-${Math.round((1 - p.salePriceCents / p.priceCents) * 100)}%</span>`,
+      );
     if (p.badge) {
-      const cls = p.badge === "Limited" ? "limited" : p.badge === "Best Seller" ? "best" : p.isNew ? "" : "trend";
+      const cls =
+        p.badge === "Limited"
+          ? "limited"
+          : p.badge === "Best Seller"
+            ? "best"
+            : p.isNew
+              ? ""
+              : "trend";
       badges.push(`<span class="badge ${cls}">${p.badge}</span>`);
     }
     if (soldOut) badges.push(`<span class="badge limited">Sold Out</span>`);
@@ -598,8 +634,8 @@
           color: p.colors[0]?.name || "",
           maxStock: p.stock,
         }).replace(/'/g, "&#39;")}' ${soldOut ? "disabled" : ""}>${
-      soldOut ? "Sold Out" : `Add to Bag — ${MV.money(price)}`
-    }</button>
+          soldOut ? "Sold Out" : `Add to Bag — ${MV.money(price)}`
+        }</button>
       </div>
       <div class="pc-info">
         <p class="pc-cat">${p.category?.name || ""}</p>
@@ -612,7 +648,10 @@
         ${
           p.colors?.length
             ? `<div class="pc-colors" aria-label="Available colors">${p.colors
-                .map((c, i) => `<span class="dot${i === 0 ? " on" : ""}" style="background:${c.hex}" title="${c.name}"></span>`)
+                .map(
+                  (c, i) =>
+                    `<span class="dot${i === 0 ? " on" : ""}" style="background:${c.hex}" title="${c.name}"></span>`,
+                )
                 .join("")}</div>`
             : ""
         }
@@ -648,7 +687,10 @@
     renderCartDrawer();
     updateBadges();
     try {
-      const [me, cfg] = await Promise.all([MV.api.get("/api/auth/me"), MV.api.get("/api/config")]);
+      const [me, cfg] = await Promise.all([
+        MV.api.get("/api/auth/me"),
+        MV.api.get("/api/config"),
+      ]);
       MV.user = me.user;
       MV.config = cfg;
     } catch {}
@@ -657,7 +699,10 @@
       $("#account-btn").href = "/account.html";
       $("#account-btn").ariaLabel = `Account — ${MV.user.name}`;
       try {
-        localStorage.setItem("mv-wish", localStorage.getItem("mv-wish") || "[]");
+        localStorage.setItem(
+          "mv-wish",
+          localStorage.getItem("mv-wish") || "[]",
+        );
         const [serverCart, serverWish] = await Promise.all([
           MV.api.get("/api/cart"),
           MV.api.get("/api/wishlist"),
@@ -666,18 +711,44 @@
         for (const s of serverCart.items) {
           const k = `${s.productId}|${s.size}|${s.color}`;
           const local = map.get(k);
-          map.set(k, local ? { ...local, qty: Math.max(local.qty, s.qty) } : { productId: s.productId, qty: s.qty, size: s.size, color: s.color, name: s.name || "", image: "", priceCents: 0 });
+          map.set(
+            k,
+            local
+              ? { ...local, qty: Math.max(local.qty, s.qty) }
+              : {
+                  productId: s.productId,
+                  qty: s.qty,
+                  size: s.size,
+                  color: s.color,
+                  name: s.name || "",
+                  image: "",
+                  priceCents: 0,
+                },
+          );
         }
         MV.cart = [...map.values()];
         const missingMeta = MV.cart.filter((i) => !i.priceCents);
         if (missingMeta.length) {
-          const ids = [...new Set(missingMeta.map((i) => i.productId))].join(",");
+          const ids = [...new Set(missingMeta.map((i) => i.productId))].join(
+            ",",
+          );
           const res = await MV.api.get(`/api/products?ids=${ids}&limit=60`);
           const byId = Object.fromEntries(res.products.map((p) => [p.id, p]));
-          MV.cart = MV.cart.filter((i) => byId[i.productId]).map((i) => {
-            const p = byId[i.productId];
-            return { productId: p.id, name: p.name, image: p.images[0] || "", priceCents: MV.effectivePriceCents(p), qty: Math.min(i.qty, Math.max(p.stock, 1)), size: i.size, color: i.color, maxStock: p.stock };
-          });
+          MV.cart = MV.cart
+            .filter((i) => byId[i.productId])
+            .map((i) => {
+              const p = byId[i.productId];
+              return {
+                productId: p.id,
+                name: p.name,
+                image: p.images[0] || "",
+                priceCents: MV.effectivePriceCents(p),
+                qty: Math.min(i.qty, Math.max(p.stock, 1)),
+                size: i.size,
+                color: i.color,
+                maxStock: p.stock,
+              };
+            });
         }
         MV.wish = new Set(serverWish.productIds);
         persistCart();
