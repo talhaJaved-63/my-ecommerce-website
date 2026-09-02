@@ -965,6 +965,167 @@ button {
   margin-top: 2.4rem;
 }
 
+/* ── Promotional Banner ── */
+.promo-banner {
+  position: relative;
+  min-height: 62vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.promo-banner-media,
+.promo-banner-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.promo-banner-media img {
+  object-fit: cover;
+  object-position: center 30%;
+  transition: transform 8s var(--ease);
+}
+
+.promo-banner:hover .promo-banner-media img {
+  transform: scale(1.05);
+}
+
+.promo-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 14, 13, 0.55);
+  z-index: 1;
+}
+
+.promo-banner-content {
+  position: relative;
+  z-index: 2;
+  color: var(--cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+.promo-banner-title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.8rem, 6.5vw, 5.2rem);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.promo-banner-cta {
+  margin-top: 2rem;
+}
+
+.promo-banner-note {
+  position: absolute;
+  bottom: 2.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(239, 233, 223, 0.75);
+}
+/* ── Promotional Banner ── */
+/* ── Promotional Banner ── */
+.promo-banner {
+  position: relative;
+  width: 100%;
+  min-height: 80vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.promo-banner-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.promo-banner-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  transition: transform 8s var(--ease);
+}
+
+.promo-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25); /* Subtle dark tint over image */
+  z-index: 1;
+}
+
+.promo-banner-content {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1.5rem;
+}
+
+.promo-banner-subtitle {
+  font-family: var(--sans-serif, sans-serif);
+  font-size: 0.85rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.promo-banner-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-transform: none; /* Sentence case like image */
+  margin-bottom: 1.25rem;
+}
+
+.promo-banner-description {
+  font-family: var(--sans-serif, sans-serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin-bottom: 2.25rem;
+  opacity: 0.95;
+}
+
+.promo-banner-cta {
+  background-color: #f1ebd9; /* Off-white/cream button */
+  color: #1a1a1a;
+  padding: 1rem 2.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0;
+  transition: background-color 0.3s ease;
+}
+
+.promo-banner-cta:hover {
+  background-color: #ffffff;
+}
+
 .cat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1888,6 +2049,7 @@ button {
   .search-results {
     grid-template-columns: 1fr;
   }
+  
 }
 
 @media (prefers-reduced-motion: reduce) {
