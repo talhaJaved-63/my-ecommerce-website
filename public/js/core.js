@@ -71,7 +71,7 @@
 
   const CHROME_TOP = `
   <a href="#main" class="skip-link">Skip to content</a>
-  <div class="announce"><p>Complimentary shipping on orders over $150&nbsp;&nbsp;·&nbsp;&nbsp;Free 30-day returns</p></div>
+  <div class="announce"><p>Complimentary shipping on orders over $75&nbsp;&nbsp;·&nbsp;&nbsp;Free 30-day returns</p></div>
 
   <header class="site-header" id="site-header">
     <div class="container header-inner">
