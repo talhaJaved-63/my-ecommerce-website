@@ -80,7 +80,7 @@
       </button>
       <a href="/" class="logo">Maison Velvet</a>
       <nav class="nav-links" aria-label="Primary">
-        <a class="nav-link" href="/">Home</a>
+        
         <a class="nav-link" href="/#new-arrivals">New Arrivals</a>
         <a class="nav-link" href="/shop.html?dept=women">Women</a>
         <a class="nav-link" href="/shop.html?dept=men">Men</a>
@@ -181,7 +181,7 @@
       <button class="icon-btn drawer-close" data-close aria-label="Close menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <nav class="menu-links" aria-label="Mobile primary">
-      <a href="/">Home</a>
+      
       <a href="/shop.html?new=1">New Arrivals</a>
       <a href="/shop.html?dept=women">Women</a>
       <a href="/shop.html?dept=men">Men</a>
