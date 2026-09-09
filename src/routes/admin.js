@@ -111,6 +111,7 @@ function readProductBody(body, existingId = null) {
     .map((c) => ({ name: String(c?.name || "").slice(0, 24), hex: /^#[0-9a-f]{3,8}$/i.test(c?.hex || "") ? c.hex : "#cccccc" }))
     .filter((c) => c.name);
   const sizes = (Array.isArray(body?.sizes) ? body.sizes : []).map((s) => String(s).slice(0, 12)).filter(Boolean).slice(0, 15);
+  const variations = sanitizeVariations(body?.variations, colors, sizes);
   return {
     name,
     description: String(body?.description || "").slice(0, 4000),
@@ -126,10 +127,71 @@ function readProductBody(body, existingId = null) {
     sizes: JSON.stringify(sizes),
     colors: JSON.stringify(colors),
     images: JSON.stringify(images),
+    variations: JSON.stringify(variations),
     rating: Math.min(Math.max(parseFloat(body?.rating ?? 0) || 0, 0), 5),
     reviewsCount: Math.max(toInt(body?.reviewsCount ?? 0, -1), 0),
     ...(existingId ? {} : { sku: String(body?.sku || "").trim() }),
   };
+}
+
+/**
+ * Validates the admin-supplied variations array. Each variation must be:
+ *  - a plain object with an explicit string id (unique within the product)
+ *  - a color that exists in `colors` (matched by name, hex taken from `colors`)
+ *  - a size that exists in `sizes`
+ *  - an optional per-variation price in whole cents (must be a valid number
+ *    greater than zero; null/empty falls back to the product base/sale price)
+ *  - an images array of valid uploaded URLs (max 8)
+ * Duplicate color+size combinations are rejected rather than silently merged.
+ */
+function sanitizeVariations(raw, colors, sizes) {
+  const list = Array.isArray(raw) ? raw : [];
+  const colorByName = new Map(colors.map((c) => [c.name, c]));
+  const sizeSet = new Set(sizes);
+  const seenCombo = new Set();
+  const seenIds = new Set();
+  const out = [];
+  for (const [i, v] of list.entries()) {
+    if (!v || typeof v !== "object") continue;
+    const color = colorByName.get(String(v.color?.name || "").trim());
+    const size = String(v.size || "").trim();
+    if (!color) {
+      throw badRequest(`Variation ${i + 1} references a color that was removed from the product. Add it back or remove the variation.`);
+    }
+    if (!sizeSet.has(size)) {
+      throw badRequest(`Variation ${i + 1} (${color.name}) references a size that was removed from the product. Add it back or remove the variation.`);
+    }
+    const combo = `${color.name}\u0000${size}`;
+    if (seenCombo.has(combo)) {
+      throw badRequest(`Duplicate variation: ${color.name} × ${size} already exists for this product.`);
+    }
+    seenCombo.add(combo);
+    let id = String(v.id || "").trim().slice(0, 48);
+    if (!id || seenIds.has(id)) id = `variation-${crypto.randomBytes(6).toString("hex")}`;
+    seenIds.add(id);
+    const images = (Array.isArray(v.images) ? v.images : [])
+      .map((u) => String(u).trim())
+      .filter((u) => /^https?:\/\/.+/i.test(u) || (u.startsWith("/") && u.includes("/uploads/")))
+      .slice(0, 8);
+    const price = sanitizeVariationPrice(v.price, i + 1);
+    out.push({ id, color: { name: color.name, hex: color.hex }, size, price, images });
+  }
+  return out.slice(0, 40);
+}
+
+function sanitizeVariationPrice(raw, index) {
+  if (raw === undefined || raw === null || raw === "") return null;
+  const cents = Math.round(Number(raw));
+  if (!Number.isFinite(cents)) {
+    throw badRequest(`Variation ${index} price must be a valid number.`);
+  }
+  if (cents < 0) {
+    throw badRequest(`Variation ${index} price cannot be negative.`);
+  }
+  if (cents === 0) {
+    throw badRequest(`Variation ${index} price must be greater than zero, or leave it blank to use the product price.`);
+  }
+  return cents;
 }
 
 function badRequest(message) {
@@ -185,6 +247,7 @@ function shapeAdminProduct(r) {
     sizes: JSON.parse(r.sizes || "[]"),
     colors: JSON.parse(r.colors || "[]"),
     images: JSON.parse(r.images || "[]"),
+    variations: JSON.parse(r.variations || "[]"),
     rating: r.rating,
     reviewsCount: r.reviews_count,
     updatedAt: r.updated_at,
@@ -199,12 +262,12 @@ router.post("/products", (req, res) => {
   const info = db
     .prepare(
       `INSERT INTO products (sku, name, slug, description, category_id, dept, price_cents, sale_price_cents, badge,
-        status, is_trending, is_new, stock, sizes, colors, images, rating, reviews_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        status, is_trending, is_new, stock, sizes, colors, images, variations, rating, reviews_count)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       sku, b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.badge,
-      b.status, b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.rating, b.reviewsCount
+      b.status, b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.variations, b.rating, b.reviewsCount
     );
   res.status(201).json({ product: shapeAdminProduct(db.prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.id = ?").get(info.lastInsertRowid)) });
 });
@@ -220,11 +283,11 @@ router.put("/products/:id", (req, res) => {
   const slug = req.body?.name ? uniqueSlug(req.body.name, id) : existing.slug;
   db.prepare(
     `UPDATE products SET name=?, slug=?, description=?, category_id=?, dept=?, price_cents=?, sale_price_cents=?,
-      badge=?, status=?, is_trending=?, is_new=?, stock=?, sizes=?, colors=?, images=?, rating=?, reviews_count=?, updated_at=?
+      badge=?, status=?, is_trending=?, is_new=?, stock=?, sizes=?, colors=?, images=?, variations=?, rating=?, reviews_count=?, updated_at=?
      WHERE id=?`
   ).run(
     b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.badge, b.status,
-    b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.rating, b.reviewsCount, now(), id
+    b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.variations, b.rating, b.reviewsCount, now(), id
   );
   res.json({ product: shapeAdminProduct(db.prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.id = ?").get(id)) });
 });

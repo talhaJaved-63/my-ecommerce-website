@@ -129,7 +129,7 @@ router.get("/products/:idOrSlug", (req, res) => {
 /* ------------------------------ cart & wishlist ---------------------------- */
 
 const cartSelect = `
-  SELECT ct.qty, ct.size, ct.color, p.id AS productId, p.stock
+  SELECT ct.qty, ct.size, ct.color, ct.variation_id AS variationId, p.id AS productId, p.stock
   FROM carts ct JOIN products p ON p.id = ct.product_id
   WHERE ct.user_id = ? AND p.status = 'active'
   ORDER BY ct.updated_at DESC`;
@@ -145,15 +145,15 @@ router.put("/cart", requireAuth, (req, res) => {
     const pid = parseInt(it?.productId, 10);
     const qty = Math.min(Math.max(parseInt(it?.qty, 10) || 0, 1), 20);
     if (!Number.isInteger(pid)) continue;
-    clean.push({ pid, qty, size: String(it.size || "").slice(0, 16), color: String(it.color || "").slice(0, 32) });
+    clean.push({ pid, qty, size: String(it.size || "").slice(0, 16), color: String(it.color || "").slice(0, 32), variationId: String(it.variationId || "").slice(0, 64) });
   }
   const exists = db.prepare("SELECT id FROM products WHERE id = ? AND status = 'active'");
   withTransaction(() => {
     db.prepare("DELETE FROM carts WHERE user_id = ?").run(req.user.id);
     const ins = db.prepare(
-      "INSERT OR REPLACE INTO carts (user_id, product_id, qty, size, color, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT OR REPLACE INTO carts (user_id, product_id, qty, size, color, variation_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
     );
-    for (const c of clean) if (exists.get(c.pid)) ins.run(req.user.id, c.pid, c.qty, c.size, c.color, now());
+    for (const c of clean) if (exists.get(c.pid)) ins.run(req.user.id, c.pid, c.qty, c.size, c.color, c.variationId, now());
   });
   res.json({ ok: true });
 });
@@ -203,11 +203,36 @@ function resolveItems(rawItems) {
       errors.push("An item in your bag is no longer available.");
       continue;
     }
-    const unit = row.sale_price_cents ?? row.price_cents;
+    const size = String(it.size || "").slice(0, 16);
+    const color = String(it.color || "").slice(0, 32);
+    const variationId = String(it.variationId || "").slice(0, 64);
+    const unit = variationPrice(row, size, color, variationId) ?? row.sale_price_cents ?? row.price_cents;
     subtotalCents += unit * qty;
-    resolved.push({ row, qty, unit, size: String(it.size || "").slice(0, 16), color: String(it.color || "").slice(0, 32) });
+    resolved.push({ row, qty, unit, size, color, variationId });
   }
   return { resolved, subtotalCents, errors };
+}
+
+/* Resolve the authoritative unit price for an order/cart item: prefer the
+   matched variation's own price, fall back to the product's sale/base price. */
+function variationPrice(row, size, color, variationId) {
+  const variations = parseJSON(row.variations);
+  const found = variationId && variations.find((v) => v.id === variationId);
+  if (found?.price != null) return found.price;
+  const byCombo = variations.find((v) => v.color?.name === color && v.size === size);
+  if (byCombo?.price != null) return byCombo.price;
+  return null;
+}
+
+/* Resolve the display image for an order item: prefer the matched variation's first
+   image, fall back to the product's global first image, then an empty string. */
+function variationImage(row, size, color, variationId) {
+  const variations = parseJSON(row.variations);
+  const found = variationId && variations.find((v) => v.id === variationId);
+  if (found?.images?.length) return found.images[0];
+  const byCombo = variations.find((v) => v.color?.name === color && v.size === size);
+  if (byCombo?.images?.length) return byCombo.images[0];
+  return parseJSON(row.images)[0] || "";
 }
 
 router.post("/checkout/intent", wrapAsync(async (req, res) => {
@@ -234,11 +259,12 @@ router.post("/checkout/intent", wrapAsync(async (req, res) => {
     items: resolved.map((r) => ({
       productId: r.row.id,
       name: r.row.name,
-      image: parseJSON(r.row.images)[0] || "",
+      image: variationImage(r.row, r.size, r.color, r.variationId),
       unitPriceCents: r.unit,
       qty: r.qty,
       size: r.size,
       color: r.color,
+      variationId: r.variationId,
     })),
   });
 }));
@@ -299,10 +325,10 @@ router.post("/orders", wrapAsync(async (req, res) => {
       );
     const orderId = info.lastInsertRowid;
     const insItem = db.prepare(
-      "INSERT INTO order_items (order_id, product_id, name, image, price_cents, qty, size, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO order_items (order_id, product_id, name, image, price_cents, qty, size, color, variation_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     for (const r of resolved)
-      insItem.run(orderId, r.row.id, r.row.name, parseJSON(r.row.images)[0] || "", r.unit, r.qty, r.size, r.color);
+      insItem.run(orderId, r.row.id, r.row.name, variationImage(r.row, r.size, r.color, r.variationId), r.unit, r.qty, r.size, r.color, r.variationId);
     if (req.user) db.prepare("DELETE FROM carts WHERE user_id = ?").run(req.user.id);
     return orderId;
   });
@@ -320,7 +346,7 @@ router.post("/orders", wrapAsync(async (req, res) => {
 
 function shapeOrder(o, withCustomer = false) {
   const items = db
-    .prepare("SELECT product_id AS productId, name, image, price_cents, qty, size, color FROM order_items WHERE order_id = ?")
+    .prepare("SELECT product_id AS productId, name, image, price_cents, qty, size, color, variation_id AS variationId FROM order_items WHERE order_id = ?")
     .all(o.id)
     .map((i) => ({ ...i, priceCents: i.price_cents }));
   const base = {

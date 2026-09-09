@@ -596,6 +596,45 @@ textarea.input {
   padding: 0.2rem 0.4rem;
 }
 
+/* --------------------------- product variations ------------------------ */
+
+.var-list { display: grid; gap: 0.9rem; }
+
+.var-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.var-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.var-head strong {
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.var-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .var-grid { grid-template-columns: 1fr; }
+}
+
+.var-block .img-grid { margin-top: 0.2rem; }
+
 /* ----------------------------- order detail --------------------------- */
 
 .od-grid {

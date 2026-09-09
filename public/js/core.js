@@ -257,8 +257,8 @@
 
   /* ---------------------------------- cart ---------------------------------- */
 
-  const FREE_AT = 15000;
-  const cartKey = (i) => `${i.productId}|${i.size}|${i.color}`;
+const FREE_AT = 15000;
+const cartKey = (i) => `${i.productId}|${i.size}|${i.color}|${i.variationId || ""}`;
 
   MV.cartQty = () => MV.cart.reduce((n, i) => n + i.qty, 0);
   MV.cartSubtotalCents = () =>
@@ -274,11 +274,12 @@
       syncTimer = setTimeout(async () => {
         try {
           await MV.api.put("/api/cart", {
-            items: MV.cart.map(({ productId, qty, size, color }) => ({
+            items: MV.cart.map(({ productId, qty, size, color, variationId }) => ({
               productId,
               qty,
               size,
               color,
+              variationId,
             })),
           });
         } catch {}
@@ -613,8 +614,24 @@
       badges.push(`<span class="badge ${cls}">${p.badge}</span>`);
     }
     if (soldOut) badges.push(`<span class="badge limited">Sold Out</span>`);
-    const imgA = p.images[0] || "";
-    const imgB = p.images[1] || p.images[0] || "";
+    const v0 = p.variations?.[0] || null;
+    const imgA = (v0 && v0.images?.[0]) || p.images[0] || "";
+    const imgB =
+      (v0 && v0.images?.[1]) ||
+      p.images[1] ||
+      (v0 && v0.images?.[0]) ||
+      p.images[0] ||
+      "";
+    const quickAdd = {
+      productId: p.id,
+      name: p.name,
+      image: imgA,
+      priceCents: v0?.price ?? price,
+      size: v0 ? v0.size : p.sizes[0] || "",
+      color: v0 ? v0.color?.name : p.colors[0]?.name || "",
+      variationId: v0 ? v0.id : "",
+      maxStock: p.stock,
+    };
     return `
     <article class="p-card reveal" data-id="${p.id}" data-name="${p.name}">
       <div class="pc-media">
@@ -625,15 +642,7 @@
         <a class="pc-link" href="/product.html?id=${p.id}" aria-label="${p.name}"></a>
         <img class="pc-img pc-img-a" src="${imgA}" alt="${p.name}" loading="lazy">
         <img class="pc-img pc-img-b" src="${imgB}" alt="" aria-hidden="true" loading="lazy">
-        <button class="pc-add" data-add='${JSON.stringify({
-          productId: p.id,
-          name: p.name,
-          image: p.images[0] || "",
-          priceCents: price,
-          size: p.sizes[0] || "",
-          color: p.colors[0]?.name || "",
-          maxStock: p.stock,
-        }).replace(/'/g, "&#39;")}' ${soldOut ? "disabled" : ""}>${
+        <button class="pc-add" data-add='${JSON.stringify(quickAdd).replace(/'/g, "&#39;")}' ${soldOut ? "disabled" : ""}>${
           soldOut ? "Sold Out" : `Add to Bag — ${MV.money(price)}`
         }</button>
       </div>
@@ -709,7 +718,7 @@
         ]);
         const map = new Map(MV.cart.map((i) => [cartKey(i), { ...i }]));
         for (const s of serverCart.items) {
-          const k = `${s.productId}|${s.size}|${s.color}`;
+          const k = `${s.productId}|${s.size}|${s.color}|${s.variationId || ""}`;
           const local = map.get(k);
           map.set(
             k,
@@ -720,6 +729,7 @@
                   qty: s.qty,
                   size: s.size,
                   color: s.color,
+                  variationId: s.variationId || "",
                   name: s.name || "",
                   image: "",
                   priceCents: 0,
@@ -738,14 +748,19 @@
             .filter((i) => byId[i.productId])
             .map((i) => {
               const p = byId[i.productId];
+              const vars = Array.isArray(p.variations) ? p.variations : [];
+              const varHit =
+                (i.variationId && vars.find((v) => v.id === i.variationId)) ||
+                vars.find((v) => v.color?.name === i.color && v.size === i.size);
               return {
                 productId: p.id,
                 name: p.name,
-                image: p.images[0] || "",
-                priceCents: MV.effectivePriceCents(p),
+                image: varHit?.images?.[0] || p.images[0] || "",
+                priceCents: varHit?.price ?? MV.effectivePriceCents(p),
                 qty: Math.min(i.qty, Math.max(p.stock, 1)),
                 size: i.size,
                 color: i.color,
+                variationId: i.variationId || "",
                 maxStock: p.stock,
               };
             });

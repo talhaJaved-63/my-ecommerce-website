@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS products (
   sizes            TEXT    NOT NULL DEFAULT '[]',
   colors           TEXT    NOT NULL DEFAULT '[]',
   images           TEXT    NOT NULL DEFAULT '[]',
+  variations       TEXT    NOT NULL DEFAULT '[]',
   rating           REAL    NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
   reviews_count    INTEGER NOT NULL DEFAULT 0,
   created_at       TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -60,12 +61,13 @@ CREATE TABLE IF NOT EXISTS wishlists (
 );
 
 CREATE TABLE IF NOT EXISTS carts (
-  user_id    INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
-  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  qty        INTEGER NOT NULL CHECK (qty > 0),
-  size       TEXT    NOT NULL DEFAULT '',
-  color      TEXT    NOT NULL DEFAULT '',
-  updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  user_id       INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  product_id    INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  qty           INTEGER NOT NULL CHECK (qty > 0),
+  size          TEXT    NOT NULL DEFAULT '',
+  color         TEXT    NOT NULL DEFAULT '',
+  variation_id  TEXT    NOT NULL DEFAULT '',
+  updated_at    TEXT    NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, product_id, size, color)
 );
 
@@ -111,10 +113,26 @@ CREATE TABLE IF NOT EXISTS order_items (
   price_cents INTEGER NOT NULL,
   qty         INTEGER NOT NULL CHECK (qty > 0),
   size        TEXT    NOT NULL DEFAULT '',
-  color       TEXT    NOT NULL DEFAULT ''
+  color       TEXT    NOT NULL DEFAULT '',
+  variation_id TEXT   NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 `);
+
+/* ----------------------- backward-compatible migration ----------------------- */
+
+const existingProductCols = db.prepare("PRAGMA table_info(products)").all().map((c) => c.name);
+if (!existingProductCols.includes("variations")) {
+  db.exec("ALTER TABLE products ADD COLUMN variations TEXT NOT NULL DEFAULT '[]'");
+}
+const existingCartCols = db.prepare("PRAGMA table_info(carts)").all().map((c) => c.name);
+if (!existingCartCols.includes("variation_id")) {
+  db.exec("ALTER TABLE carts ADD COLUMN variation_id TEXT NOT NULL DEFAULT ''");
+}
+const existingItemCols = db.prepare("PRAGMA table_info(order_items)").all().map((c) => c.name);
+if (!existingItemCols.includes("variation_id")) {
+  db.exec("ALTER TABLE order_items ADD COLUMN variation_id TEXT NOT NULL DEFAULT ''");
+}
 
 const now = () => new Date().toISOString().replace("T", " ").slice(0, 19);
 const parseJSON = (s, fallback = []) => {
@@ -147,6 +165,7 @@ function shapeProduct(row, { withDescription = false } = {}) {
     sizes: parseJSON(row.sizes),
     colors: parseJSON(row.colors),
     images: parseJSON(row.images),
+    variations: parseJSON(row.variations),
     rating: row.rating,
     reviewsCount: row.reviews_count,
     createdAt: row.created_at,

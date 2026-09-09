@@ -394,6 +394,20 @@ textarea.input {
   border-color: var(--ink);
 }
 
+.swatch.off,
+.size-btn.off {
+  opacity: 0.35;
+  pointer-events: none;
+  text-decoration: line-through;
+}
+
+.combo-note {
+  margin: 0.8rem 0 -0.2rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--sale);
+}
+
 .buy-row {
   display: flex;
   gap: 0.8rem;

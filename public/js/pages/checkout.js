@@ -19,7 +19,7 @@
 
   let intent = null;
   try {
-    intent = await MV.api.post("/api/checkout/intent", { items: MV.cart.map(({ productId, qty, size, color }) => ({ productId, qty, size, color })) });
+    intent = await MV.api.post("/api/checkout/intent", { items: MV.cart.map(({ productId, qty, size, color, variationId }) => ({ productId, qty, size, color, variationId })) });
   } catch (err) {
     linesEl.innerHTML = `<p class="grid-empty">${err.message}</p>`;
     document.getElementById("co-form").style.display = "none";
@@ -179,6 +179,7 @@
           qty: i.qty,
           size: i.size,
           color: i.color,
+          variationId: i.variationId,
         })),
         customer,
         paymentRef,

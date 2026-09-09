@@ -311,7 +311,7 @@
             ${items
               .map(
                 (p) => `<tr>
-                  <td><img class="row-thumb" src="${esc(p.images[0] || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td>
+                  <td><img class="row-thumb" src="${esc(p.images[0] || p.variations?.[0]?.images?.[0] || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td>
                   <td>
                     <span class="row-name">${esc(p.name)}</span>${
                       p.isTrending ? '<span class="flag">Trend</span>' : ""
@@ -363,6 +363,14 @@
     const isEdit = !!p;
     const imgs = [...(p?.images || [])];
     const colors = (p?.colors || []).map((c) => ({ ...c }));
+    const variations = (p?.variations || []).map((v) => ({
+      id: v.id || newVarId(),
+      colorName: v.color?.name || "",
+      size: v.size || "",
+      price: v.price ?? null,
+      images: [...(v.images || [])],
+    }));
+    const newVarId = () => `variation-${Math.random().toString(36).slice(2, 10)}`;
 
     const catOpts =
       [`<option value="">— None —</option>`]
@@ -438,7 +446,7 @@
           <label for="p-desc">Description</label>
           <textarea class="input" id="p-desc" rows="4" maxlength="4000">${esc(p?.description || "")}</textarea>
         </div>
-        <div class="field">
+        <div class="field span-2">
           <label for="p-sizes">Sizes</label>
           <input class="input" id="p-sizes" value="${esc((p?.sizes || []).join(", "))}" placeholder="XS, S, M, L, XL">
           <span class="field-hint">Comma-separated, up to 15.</span>
@@ -456,6 +464,11 @@
             <span class="field-hint">JPG, PNG, WebP or AVIF · max 5 MB each · multiple files allowed</span>
             <input type="file" id="p-files" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden>
           </label>
+        </div>
+        <div class="field span-2">
+          <label>Product Variations <span class="field-hint">Optional — colour + size combinations, each with its own images. Existing colours and sizes are used for the selectors.</span></label>
+          <div id="var-list"></div>
+          <button type="button" class="btn btn-sm" id="var-add" style="justify-self:start;margin-top:.7rem">+ Add Variation</button>
         </div>
         <p class="form-msg err span-2" id="p-msg" role="alert"></p>
       </form>`;
@@ -488,6 +501,7 @@
           syncColors();
           colors.splice(i, 1);
           renderColors();
+          syncVariationOptions();
         });
       });
     };
@@ -498,9 +512,182 @@
       syncColors();
       colors.push({ name: "", hex: "#cccccc" });
       renderColors();
+      syncVariationOptions();
       $$('#color-rows input[name="cname"]').pop()?.focus();
     });
     renderColors();
+
+    /* ------------------------- product variations ------------------------- */
+
+    const getSizesInput = () =>
+      $("#p-sizes").value.split(",").map((s) => s.trim()).filter(Boolean);
+
+    const findVar = (id) => variations.find((v) => v.id === id);
+
+    const colorOptionsHTML = (current) => {
+      const names = [...colors.map((c) => c.name.trim()).filter(Boolean)];
+      if (current && !names.includes(current)) names.push(current);
+      return names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    };
+    const sizeOptionsHTML = (current) => {
+      const names = [...getSizesInput()];
+      if (current && !names.includes(current)) names.push(current);
+      return names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    };
+
+    function renderVarImages(v) {
+      const grid = $(`[data-var-imgs="${esc(v.id)}"]`);
+      if (!grid) return;
+      grid.innerHTML = v.images
+        .map(
+          (u, i) => `<div class="img-cell">
+            <img src="${esc(u)}" alt="Variation image ${i + 1}">
+            <button type="button" class="rm" data-i="${i}" data-var-id="${esc(v.id)}" aria-label="Remove image">×</button>
+          </div>`
+        )
+        .join("");
+    }
+
+    function syncVariationOptions() {
+      $$("#var-list .var-block").forEach((block) => {
+        const v = findVar(block.dataset.varId);
+        if (!v) return;
+        const cSel = $('[data-var-color]', block);
+        if (cSel) {
+          cSel.innerHTML = colorOptionsHTML(v.colorName);
+          cSel.value = v.colorName;
+        }
+        const sSel = $('[data-var-size]', block);
+        if (sSel) {
+          sSel.innerHTML = sizeOptionsHTML(v.size);
+          sSel.value = v.size;
+        }
+      });
+    }
+
+    function renderVariations() {
+      const box = $("#var-list");
+      box.innerHTML = variations
+        .map(
+          (v, i) => `<div class="var-block" data-var-id="${esc(v.id)}">
+            <div class="var-head">
+              <strong>Variation ${i + 1}</strong>
+              <button type="button" class="btn btn-sm btn-danger" data-var-del="${esc(v.id)}">Remove Variation</button>
+            </div>
+            <div class="var-grid">
+              <div class="field">
+                <label>Colour</label>
+                <select class="select" data-var-color="${esc(v.id)}">${colorOptionsHTML(v.colorName)}</select>
+              </div>
+              <div class="field">
+                <label>Size</label>
+                <select class="select" data-var-size="${esc(v.id)}">${sizeOptionsHTML(v.size)}</select>
+              </div>
+              <div class="field">
+                <label>Price</label>
+                <input class="input" type="number" min="0.01" step="0.01" data-var-price="${esc(v.id)}" value="${v.price == null ? "" : (v.price / 100).toFixed(2)}" placeholder="Use product price">
+                <span class="field-hint">Optional — blank uses the product price.</span>
+              </div>
+            </div>
+            <div class="img-grid" data-var-imgs="${esc(v.id)}"></div>
+            <label class="upload-zone">
+              <strong>+ Upload images</strong>
+              <span class="field-hint">JPG, PNG, WebP or AVIF · max 5 MB each · up to 8 per variation</span>
+              <input type="file" data-var-files="${esc(v.id)}" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden>
+            </label>
+          </div>`
+        )
+        .join("");
+      variations.forEach((v) => {
+        const block = $(`[data-var-id="${esc(v.id)}"]`, box);
+        if (!block) return;
+        $('[data-var-color]', block).value = v.colorName;
+        $('[data-var-size]', block).value = v.size;
+        const priceIn = $('[data-var-price]', block);
+        if (priceIn) priceIn.value = v.price == null ? "" : (v.price / 100).toFixed(2);
+        renderVarImages(v);
+      });
+    }
+
+    $("#var-list").addEventListener("input", (e) => {
+      const priceIn = e.target.closest("[data-var-price]");
+      if (!priceIn) return;
+      const v = findVar(priceIn.dataset.varPrice);
+      if (!v) return;
+      v.price = priceIn.value.trim() === "" ? null : Math.round(parseFloat(priceIn.value) * 100);
+    });
+
+    $("#var-list").addEventListener("change", (e) => {
+      const cSel = e.target.closest("[data-var-color]");
+      if (cSel) {
+        const v = findVar(cSel.dataset.varColor);
+        if (v) v.colorName = cSel.value;
+        return;
+      }
+      const sSel = e.target.closest("[data-var-size]");
+      if (sSel) {
+        const v = findVar(sSel.dataset.varSize);
+        if (v) v.size = sSel.value;
+      }
+    });
+
+    $("#var-list").addEventListener("click", (e) => {
+      const rm = e.target.closest("[data-i][data-var-id]");
+      if (rm) {
+        const v = findVar(rm.dataset.varId);
+        if (!v) return;
+        const [u] = v.images.splice(Number(rm.dataset.i), 1);
+        if (u.startsWith("/uploads/")) {
+          api("DELETE", `/api/admin/upload?url=${encodeURIComponent(u)}`).catch(() => {});
+        }
+        renderVarImages(v);
+        return;
+      }
+      const del = e.target.closest("[data-var-del]");
+      if (del) {
+        const v = findVar(del.dataset.varDel);
+        if (v) {
+          variations.splice(variations.indexOf(v), 1);
+          renderVariations();
+        }
+      }
+    });
+
+    $("#var-list").addEventListener("change", async (e) => {
+      const fileInput = e.target.closest("[data-var-files]");
+      if (!fileInput) return;
+      const v = findVar(fileInput.dataset.varFiles);
+      const files = [...fileInput.files];
+      fileInput.value = "";
+      if (!files.length || !v) return;
+      const room = 8 - v.images.length;
+      if (room <= 0) return ($("#p-msg").textContent = "Maximum of 8 images per variation reached.");
+      const batch = files.slice(0, room);
+      if (files.length > room) toast(`Only ${room} more image${room === 1 ? "" : "s"} allowed for this variation — extra files skipped.`);
+      const fd = new FormData();
+      batch.forEach((f) => fd.append("files", f));
+      $("#p-msg").textContent = "";
+      try {
+        const res = await api("POST", "/api/admin/upload", fd);
+        v.images.push(...res.urls);
+        renderVarImages(v);
+      } catch (err) {
+        $("#p-msg").textContent = err.message;
+      }
+    });
+
+    $("#var-add").addEventListener("click", () => {
+      const names = colors.map((c) => c.name.trim()).filter(Boolean);
+      const sizes = getSizesInput();
+      if (!names.length || !sizes.length) {
+        return ($("#p-msg").textContent = "Add at least one colour and one size before creating variations.");
+      }
+      variations.push({ id: newVarId(), colorName: names[0], size: sizes[0], images: [] });
+      renderVariations();
+    });
+
+    $("#p-sizes").addEventListener("input", syncVariationOptions);
+    renderVariations();
 
     const renderImgs = () => {
       $("#img-grid").innerHTML = imgs
@@ -559,6 +746,41 @@
       const saleRaw = $("#p-sale").value;
       const salePriceCents = saleRaw === "" ? null : cents(saleRaw);
 
+      syncColors();
+
+      $$("#var-list .var-block").forEach((block) => {
+        const v = findVar(block.dataset.varId);
+        if (!v) return;
+        v.colorName = $('[data-var-color]', block).value;
+        v.size = $('[data-var-size]', block).value;
+        const priceIn = $('[data-var-price]', block);
+        if (priceIn) v.price = priceIn.value.trim() === "" ? null : cents(priceIn.value);
+      });
+
+      const colorNames = colors.map((c) => c.name.trim()).filter(Boolean);
+      const sizeNames = getSizesInput();
+      for (const v of variations) {
+        if (!colorNames.includes(v.colorName)) {
+          return (msg.textContent = `Variation “${v.colorName}” uses a colour that was removed. Add the colour back or remove the variation.`);
+        }
+        if (!sizeNames.includes(v.size)) {
+          return (msg.textContent = `Variation “${v.colorName} × ${v.size}” uses a size that was removed. Add the size back or remove the variation.`);
+        }
+        if (v.price != null && (!isFinite(v.price) || v.price < 0)) {
+          return (msg.textContent = `Variation “${v.colorName} × ${v.size}” price must be a valid number and cannot be negative.`);
+        }
+        if (v.price === 0) {
+          return (msg.textContent = `Variation “${v.colorName} × ${v.size}” price must be greater than zero, or leave it blank to use the product price.`);
+        }
+      }
+      const seenVar = new Set();
+      for (const v of variations) {
+        const k = `${v.colorName} × ${v.size}`;
+        if (seenVar.has(k)) return (msg.textContent = `Duplicate variation: ${k} already exists for this product.`);
+        seenVar.add(k);
+      }
+      const hexOf = (name) => colors.find((c) => c.name.trim() === name)?.hex || "#cccccc";
+
       const payload = {
         name: $("#p-name").value.trim(),
         description: $("#p-desc").value.trim(),
@@ -575,6 +797,13 @@
         isNew: $("#p-new").checked,
         sizes: $("#p-sizes").value.split(",").map((s) => s.trim()).filter(Boolean),
         colors: colors.filter((c) => c.name.trim()).map((c) => ({ name: c.name.trim(), hex: c.hex })),
+        variations: variations.map((v) => ({
+          id: v.id,
+          color: { name: v.colorName, hex: hexOf(v.colorName) },
+          size: v.size,
+          price: v.price,
+          images: v.images,
+        })),
         images: imgs,
       };
 
@@ -623,7 +852,7 @@
             ${items
               .map(
                 (p) => `<tr class="${p.stock < 6 ? "low" : ""}" data-id="${p.id}">
-                  <td><img class="row-thumb" src="${esc(p.images[0] || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td>
+                  <td><img class="row-thumb" src="${esc(p.images[0] || p.variations?.[0]?.images?.[0] || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td>
                   <td><span class="row-name">${esc(p.name)}</span><br><span class="row-sub">${esc(p.sku)}</span></td>
                   <td>${esc(p.categoryName || "—")}</td>
                   <td class="t-num"><span class="stock-chip ${p.stock === 0 ? "zero" : p.stock < 6 ? "low" : ""}">${p.stock}</span></td>
