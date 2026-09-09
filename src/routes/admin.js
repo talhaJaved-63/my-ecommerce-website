@@ -91,11 +91,14 @@ function uniqueSlug(name, excludeId = null) {
 function readProductBody(body, existingId = null) {
   const name = String(body?.name || "").trim();
   if (name.length < 2 || name.length > 120) throw badRequest("Product name is required (2–120 characters).");
-  const priceCents = toInt(body?.priceCents, 0, "Price must be a positive number.");
-  if (priceCents <= 0) throw badRequest("Price must be greater than zero.");
+  const priceText = String(body?.priceText ?? "").trim().slice(0, 60);
+  const priceCents = priceText
+    ? parsePriceToCents(priceText)
+    : toInt(body?.priceCents, 0, "Product price is required.");
+  if (!priceText && !(priceCents > 0)) throw badRequest("Product price is required.");
   const saleRaw = body?.salePriceCents === "" || body?.salePriceCents == null ? null : toInt(body.salePriceCents, null);
   if (saleRaw !== null && saleRaw <= 0) throw badRequest("Sale price must be greater than zero.");
-  if (saleRaw !== null && saleRaw >= priceCents) throw badRequest("Sale price must be lower than the regular price.");
+  if (saleRaw !== null && saleRaw >= priceCents && isPlainPrice(priceText)) throw badRequest("Sale price must be lower than the regular price.");
   const badge = body?.badge ? String(body.badge) : null;
   if (badge && !["New", "Trending", "Best Seller", "Limited"].includes(badge)) throw badRequest("Invalid badge.");
   const status = ["draft", "active", "archived"].includes(body?.status) ? body.status : "draft";
@@ -119,6 +122,7 @@ function readProductBody(body, existingId = null) {
     dept,
     priceCents,
     salePriceCents: saleRaw,
+    priceText,
     badge,
     status,
     isTrending: body?.isTrending ? 1 : 0,
@@ -197,6 +201,16 @@ function sanitizeVariationPrice(raw, index) {
 function badRequest(message) {
   return Object.assign(new Error(message), { status: 400, expose: true });
 }
+/* The general product price is a display string (ranges, currency symbols, etc.).
+   The number backing every such string is the first "price-like" value found,
+   used only as a numeric fallback for legacy cart/checkout/sorting. */
+function parsePriceToCents(text) {
+  const m = String(text).match(/\d+(?:\.\d{1,2})?/);
+  return m ? Math.round(parseFloat(m[0]) * 100) : 0;
+}
+function isPlainPrice(text) {
+  return /^\d+(?:\.\d{1,2})?$/.test(String(text || "").trim());
+}
 function toInt(v, fallback, message) {
   const n = parseInt(v, 10);
   if (!Number.isFinite(n)) {
@@ -239,6 +253,7 @@ function shapeAdminProduct(r) {
     dept: r.dept,
     priceCents: r.price_cents,
     salePriceCents: r.sale_price_cents,
+    priceText: r.price_text || "",
     badge: r.badge,
     status: r.status,
     isTrending: !!r.is_trending,
@@ -261,12 +276,12 @@ router.post("/products", (req, res) => {
   const slug = uniqueSlug(b.name);
   const info = db
     .prepare(
-      `INSERT INTO products (sku, name, slug, description, category_id, dept, price_cents, sale_price_cents, badge,
+      `INSERT INTO products (sku, name, slug, description, category_id, dept, price_cents, sale_price_cents, price_text, badge,
         status, is_trending, is_new, stock, sizes, colors, images, variations, rating, reviews_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
-      sku, b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.badge,
+      sku, b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.priceText, b.badge,
       b.status, b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.variations, b.rating, b.reviewsCount
     );
   res.status(201).json({ product: shapeAdminProduct(db.prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.id = ?").get(info.lastInsertRowid)) });
@@ -282,11 +297,11 @@ router.put("/products/:id", (req, res) => {
   const sku = existing.sku;
   const slug = req.body?.name ? uniqueSlug(req.body.name, id) : existing.slug;
   db.prepare(
-    `UPDATE products SET name=?, slug=?, description=?, category_id=?, dept=?, price_cents=?, sale_price_cents=?,
+    `UPDATE products SET name=?, slug=?, description=?, category_id=?, dept=?, price_cents=?, sale_price_cents=?, price_text=?,
       badge=?, status=?, is_trending=?, is_new=?, stock=?, sizes=?, colors=?, images=?, variations=?, rating=?, reviews_count=?, updated_at=?
      WHERE id=?`
   ).run(
-    b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.badge, b.status,
+    b.name, slug, b.description, b.categoryId, b.dept, b.priceCents, b.salePriceCents, b.priceText, b.badge, b.status,
     b.isTrending, b.isNew, b.stock, b.sizes, b.colors, b.images, b.variations, b.rating, b.reviewsCount, now(), id
   );
   res.json({ product: shapeAdminProduct(db.prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.id = ?").get(id)) });

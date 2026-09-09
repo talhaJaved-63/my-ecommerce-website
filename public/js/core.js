@@ -9,8 +9,14 @@
       const v = cents / 100;
       return `$${Number.isInteger(v) ? v.toLocaleString("en-US") : v.toFixed(2)}`;
     },
+    esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    },
     effectivePriceCents(p) {
       return p.salePriceCents ?? p.priceCents;
+    },
+    displayPrice(p) {
+      return p.priceText || this.money(this.effectivePriceCents(p));
     },
     on(evt, fn) {
       (this.listeners[evt] ||= []).push(fn);
@@ -651,8 +657,8 @@ const cartKey = (i) => `${i.productId}|${i.size}|${i.color}|${i.variationId || "
         <h3 class="pc-name"><a href="/product.html?id=${p.id}">${p.name}</a></h3>
         <div class="pc-rating">${MV.starsHTML(p.rating)}<span class="rev-count">(${p.reviewsCount})</span></div>
         <p class="pc-price-row">
-          <span class="pc-price">${MV.money(price)}</span>
-          ${p.salePriceCents ? `<s class="old">${MV.money(p.priceCents)}</s>` : ""}
+          <span class="pc-price">${MV.esc(MV.displayPrice(p))}</span>
+          ${!p.priceText && p.salePriceCents ? `<s class="old">${MV.money(p.priceCents)}</s>` : ""}
         </p>
         ${
           p.colors?.length

@@ -127,6 +127,10 @@
       priceRow.innerHTML = `<span class="pd-price">${MV.money(v.price)}</span>`;
       return;
     }
+    if (product.priceText) {
+      priceRow.innerHTML = `<span class="pd-price">${MV.esc(product.priceText)}</span>`;
+      return;
+    }
     const price = MV.effectivePriceCents(product);
     let html = `<span class="pd-price">${MV.money(price)}</span>`;
     if (product.salePriceCents) {

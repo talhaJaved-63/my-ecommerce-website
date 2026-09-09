@@ -11,6 +11,7 @@
 
   const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
   const money = (c) => usd.format((c || 0) / 100);
+  const fmtCent = (c) => (c / 100).toFixed(2).replace(/\.00$/, "");
 
   const fmtDate = (s) => {
     try {
@@ -320,9 +321,11 @@
                   </td>
                   <td>${esc(p.categoryName || "—")}</td>
                   <td class="t-num">${
-                    p.salePriceCents
-                      ? `<s style="color:var(--muted)">${money(p.priceCents)}</s> ${money(p.salePriceCents)}`
-                      : money(p.priceCents)
+                    p.priceText
+                      ? esc(p.priceText)
+                      : p.salePriceCents
+                        ? `<s style="color:var(--muted)">${money(p.priceCents)}</s> ${money(p.salePriceCents)}`
+                        : money(p.priceCents)
                   }</td>
                   <td class="t-num"><span class="stock-chip ${p.stock === 0 ? "zero" : p.stock < 6 ? "low" : ""}">${p.stock}</span></td>
                   <td>${pill(p.status)}</td>
@@ -414,8 +417,9 @@
           </select>
         </div>
         <div class="field">
-          <label for="p-price">Price (USD) *</label>
-          <input class="input" id="p-price" type="number" min="0.01" step="0.01" value="${p ? (p.priceCents / 100).toFixed(2) : ""}" required>
+          <label for="p-price">Price *</label>
+          <input class="input" id="p-price" type="text" maxlength="60" value="${p ? (p.priceText || fmtCent(p.priceCents)) : ""}" placeholder="e.g. $10 - $15">
+          <span class="field-hint">Display price — numbers, ranges, currency symbols and text are allowed (e.g. "10-15", "From $10").</span>
         </div>
         <div class="field">
           <label for="p-sale">Sale Price (USD)</label>
@@ -740,11 +744,19 @@
       msg.textContent = "";
 
       const cents = (v) => Math.round(parseFloat(v) * 100);
-      const priceCents = cents($("#p-price").value);
+      const centsFromText = (t) => {
+        const m = String(t).match(/\d+(?:\.\d{1,2})?/);
+        return m ? Math.round(parseFloat(m[0]) * 100) : 0;
+      };
+      const priceText = $("#p-price").value.trim();
       if (!$("#p-name").value.trim()) return (msg.textContent = "Product name is required.");
-      if (!(priceCents > 0)) return (msg.textContent = "Price must be greater than zero.");
+      if (!priceText) return (msg.textContent = "Product price is required.");
+      const plainPrice = /^\d+(?:\.\d{1,2})?$/.test(priceText);
+      const priceCents = centsFromText(priceText);
       const saleRaw = $("#p-sale").value;
       const salePriceCents = saleRaw === "" ? null : cents(saleRaw);
+      if (salePriceCents != null && plainPrice && !(salePriceCents < priceCents))
+        return (msg.textContent = "Sale price must be lower than the regular price.");
 
       syncColors();
 
@@ -788,7 +800,7 @@
         dept: $("#p-dept").value,
         categoryId: $("#p-cat").value || null,
         badge: $("#p-badge").value || null,
-        priceCents,
+        priceText,
         salePriceCents,
         stock: parseInt($("#p-stock").value, 10) || 0,
         rating: parseFloat($("#p-rating").value) || 0,

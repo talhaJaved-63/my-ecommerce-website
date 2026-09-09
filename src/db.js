@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS products (
   dept             TEXT    NOT NULL DEFAULT 'unisex' CHECK (dept IN ('women','men','unisex')),
   price_cents      INTEGER NOT NULL CHECK (price_cents >= 0),
   sale_price_cents INTEGER CHECK (sale_price_cents IS NULL OR sale_price_cents >= 0),
+  price_text       TEXT    NOT NULL DEFAULT '',
   badge            TEXT    CHECK (badge IN ('New','Trending','Best Seller','Limited') OR badge IS NULL),
   status           TEXT    NOT NULL DEFAULT 'active' CHECK (status IN ('draft','active','archived')),
   is_trending      INTEGER NOT NULL DEFAULT 0,
@@ -125,6 +126,9 @@ const existingProductCols = db.prepare("PRAGMA table_info(products)").all().map(
 if (!existingProductCols.includes("variations")) {
   db.exec("ALTER TABLE products ADD COLUMN variations TEXT NOT NULL DEFAULT '[]'");
 }
+if (!existingProductCols.includes("price_text")) {
+  db.exec("ALTER TABLE products ADD COLUMN price_text TEXT NOT NULL DEFAULT ''");
+}
 const existingCartCols = db.prepare("PRAGMA table_info(carts)").all().map((c) => c.name);
 if (!existingCartCols.includes("variation_id")) {
   db.exec("ALTER TABLE carts ADD COLUMN variation_id TEXT NOT NULL DEFAULT ''");
@@ -157,6 +161,7 @@ function shapeProduct(row, { withDescription = false } = {}) {
     dept: row.dept,
     priceCents: row.price_cents,
     salePriceCents: row.sale_price_cents ?? null,
+    priceText: row.price_text || "",
     badge: row.badge ?? null,
     status: row.status,
     isTrending: !!row.is_trending,
