@@ -26,6 +26,7 @@ const CATEGORIES = [
   ["Dresses", "dresses"], ["Outerwear", "outerwear"], ["Knitwear", "knitwear"], ["Denim", "denim"],
   ["Accessories", "accessories"], ["Footwear", "footwear"], ["Tailoring", "tailoring"],
   ["Essentials", "essentials"], ["Tops", "tops"], ["Bottoms", "bottoms"],
+  ["Shoes & Accessories", "shoes-accessories"],
 ];
 
 const SIZES_APPAREL = ["XS", "S", "M", "L", "XL"];

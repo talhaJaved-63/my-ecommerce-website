@@ -12,6 +12,7 @@
     { label: "All", href: "/shop.html", match: () => ![...params.keys()].some((k) => ["cat", "dept", "sale", "new", "trending"].includes(k)) },
     { label: "Women", href: "/shop.html?dept=women", match: () => params.get("dept") === "women" },
     { label: "Men", href: "/shop.html?dept=men", match: () => params.get("dept") === "men" },
+    { label: "Kids", href: "/kids.html", match: () => params.get("dept") === "kids" },
     { label: "Dresses", href: "/shop.html?cat=dresses", match: () => params.get("cat") === "dresses" },
     { label: "Tops", href: "/shop.html?cat=tops", match: () => params.get("cat") === "tops" },
     { label: "Bottoms", href: "/shop.html?cat=bottoms", match: () => params.get("cat") === "bottoms" },
@@ -26,7 +27,7 @@
     .map((c) => `<a class="chip${c.match() ? " on" : ""}" href="${c.href}">${c.label}</a>`)
     .join("");
 
-  if (params.get("dept")) title.textContent = params.get("dept") === "women" ? "Women" : "Men";
+  if (params.get("dept")) title.textContent = params.get("dept") === "kids" ? "Kids" : params.get("dept") === "women" ? "Women" : "Men";
   else if (params.get("sale")) title.textContent = "Sale";
   else if (params.get("new")) title.textContent = "New Arrivals";
   else if (params.get("trending")) title.textContent = "Trending Now";

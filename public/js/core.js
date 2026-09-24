@@ -90,6 +90,7 @@
         <a class="nav-link" href="/#new-arrivals">New Arrivals</a>
         <a class="nav-link" href="/shop.html?dept=women">Women</a>
         <a class="nav-link" href="/shop.html?dept=men">Men</a>
+        <a class="nav-link" href="/kids.html">Kids</a>
         <a class="nav-link" href="/#collection">Collections</a>
         <a class="nav-link nav-sale" href="/shop.html?sale=1">Sale</a>
       </nav>
@@ -135,6 +136,7 @@
           <li><a href="/shop.html?new=1">New Arrivals</a></li>
           <li><a href="/shop.html?dept=women">Women</a></li>
           <li><a href="/shop.html?dept=men">Men</a></li>
+          <li><a href="/kids.html">Kids</a></li>
           <li><a href="/shop.html?sale=1">Sale</a></li>
           <li><a href="/track.html">Track Order</a></li>
         </ul>
@@ -191,6 +193,7 @@
       <a href="/shop.html?new=1">New Arrivals</a>
       <a href="/shop.html?dept=women">Women</a>
       <a href="/shop.html?dept=men">Men</a>
+      <a href="/kids.html">Kids</a>
       <a href="/#collection">Collections</a>
       <a href="/shop.html?sale=1" class="sale">Sale</a>
     </nav>

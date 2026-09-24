@@ -406,7 +406,7 @@
         <div class="field">
           <label for="p-dept">Department</label>
           <select class="select" id="p-dept">
-            ${["unisex", "women", "men"].map((d) => `<option ${p?.dept === d ? "selected" : ""}>${d}</option>`).join("")}
+            ${["unisex", "women", "men", "kids"].map((d) => `<option ${p?.dept === d ? "selected" : ""}>${d}</option>`).join("")}
           </select>
         </div>
         <div class="field">

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS products (
   slug             TEXT    NOT NULL UNIQUE,
   description      TEXT    NOT NULL DEFAULT '',
   category_id      INTEGER REFERENCES categories(id) ON DELETE SET NULL,
-  dept             TEXT    NOT NULL DEFAULT 'unisex' CHECK (dept IN ('women','men','unisex')),
+  dept             TEXT    NOT NULL DEFAULT 'unisex' CHECK (dept IN ('women','men','kids','unisex')),
   price_cents      INTEGER NOT NULL CHECK (price_cents >= 0),
   sale_price_cents INTEGER CHECK (sale_price_cents IS NULL OR sale_price_cents >= 0),
   price_text       TEXT    NOT NULL DEFAULT '',
@@ -136,6 +136,57 @@ if (!existingCartCols.includes("variation_id")) {
 const existingItemCols = db.prepare("PRAGMA table_info(order_items)").all().map((c) => c.name);
 if (!existingItemCols.includes("variation_id")) {
   db.exec("ALTER TABLE order_items ADD COLUMN variation_id TEXT NOT NULL DEFAULT ''");
+}
+
+/* Allow the 'kids' department: SQLite cannot alter a CHECK constraint, so rebuild
+   the products table (preserving row data, ids and FKs) when the dept CHECK lacks 'kids'. */
+const productsSql = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'products'").get()?.sql || "";
+const deptCheck = productsSql.match(/dept\s+TEXT\s+[^,]*/)?.[0] || "";
+if (deptCheck && !deptCheck.includes("'kids'")) {
+  const rebuildProducts = () => {
+    db.exec(`CREATE TABLE products_new (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku              TEXT    NOT NULL UNIQUE,
+  name             TEXT    NOT NULL,
+  slug             TEXT    NOT NULL UNIQUE,
+  description      TEXT    NOT NULL DEFAULT '',
+  category_id      INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  dept             TEXT    NOT NULL DEFAULT 'unisex' CHECK (dept IN ('women','men','kids','unisex')),
+  price_cents      INTEGER NOT NULL CHECK (price_cents >= 0),
+  sale_price_cents INTEGER CHECK (sale_price_cents IS NULL OR sale_price_cents >= 0),
+  price_text       TEXT    NOT NULL DEFAULT '',
+  badge            TEXT    CHECK (badge IN ('New','Trending','Best Seller','Limited') OR badge IS NULL),
+  status           TEXT    NOT NULL DEFAULT 'active' CHECK (status IN ('draft','active','archived')),
+  is_trending      INTEGER NOT NULL DEFAULT 0,
+  is_new           INTEGER NOT NULL DEFAULT 0,
+  stock            INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+  sizes            TEXT    NOT NULL DEFAULT '[]',
+  colors           TEXT    NOT NULL DEFAULT '[]',
+  images           TEXT    NOT NULL DEFAULT '[]',
+  variations       TEXT    NOT NULL DEFAULT '[]',
+  rating           REAL    NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
+  reviews_count    INTEGER NOT NULL DEFAULT 0,
+  created_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT    NOT NULL DEFAULT (datetime('now'))
+)`);
+    db.exec(`INSERT INTO products_new (id, sku, name, slug, description, category_id, dept, price_cents,
+      sale_price_cents, price_text, badge, status, is_trending, is_new, stock, sizes, colors, images,
+      variations, rating, reviews_count, created_at, updated_at)
+    SELECT id, sku, name, slug, description, category_id, dept, price_cents,
+      sale_price_cents, price_text, badge, status, is_trending, is_new, stock, sizes, colors, images,
+      variations, rating, reviews_count, created_at, updated_at FROM products`);
+    db.exec("DROP TABLE products");
+    db.exec("ALTER TABLE products_new RENAME TO products");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_products_status ON products(status)");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id)");
+  };
+  db.exec("PRAGMA foreign_keys = OFF");
+  try {
+    withTransaction(rebuildProducts);
+  } finally {
+    db.exec("PRAGMA foreign_keys = ON");
+  }
+  console.log("○ products.dept CHECK extended to allow 'kids'");
 }
 
 const now = () => new Date().toISOString().replace("T", " ").slice(0, 19);

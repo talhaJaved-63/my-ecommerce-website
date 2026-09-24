@@ -102,7 +102,7 @@ function readProductBody(body, existingId = null) {
   const badge = body?.badge ? String(body.badge) : null;
   if (badge && !["New", "Trending", "Best Seller", "Limited"].includes(badge)) throw badRequest("Invalid badge.");
   const status = ["draft", "active", "archived"].includes(body?.status) ? body.status : "draft";
-  const dept = ["women", "men", "unisex"].includes(body?.dept) ? body.dept : "unisex";
+  const dept = ["women", "men", "kids", "unisex"].includes(body?.dept) ? body.dept : "unisex";
   let categoryId = body?.categoryId == null || body.categoryId === "" ? null : toInt(body.categoryId, null);
   if (categoryId && !db.prepare("SELECT id FROM categories WHERE id = ?").get(categoryId)) categoryId = null;
   const images = (Array.isArray(body?.images) ? body.images : [])
