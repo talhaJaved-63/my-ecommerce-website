@@ -939,7 +939,7 @@ textarea.input {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 60% 38%;
+  object-position: center 30%;
 }
 
 .kids-hero-overlay {
@@ -1021,6 +1021,24 @@ textarea.input {
 #kids-shoes-accessories,
 #kids-all {
   scroll-margin-top: 96px;
+}
+
+/* Kids Edit promo banner — scoped so the shared .promo-banner rules
+   (used by the homepage) stay untouched. Values mirror the global
+   banner so the image crops and scales identically to every other
+   promo banner on the site. */
+#kids-promo .promo-banner-media {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#kids-promo .promo-banner-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
 }
 
 @media (max-width: 560px) {
