@@ -109,6 +109,25 @@
   border-color: var(--ink);
 }
 
+.kids-filter {
+  justify-content: center;
+  margin: 1.9rem 0 2.4rem;
+}
+
+.kids-filter .chip {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.kids-filter .chip:not(.on) {
+  background: transparent;
+}
+
+.kids-filter .chip:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .shop-meta {
   display: flex;
   align-items: center;
@@ -123,7 +142,9 @@
   appearance: none;
   border: none;
   border-bottom: 1px solid var(--ink);
-  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23161513' fill='none'/%3E%3C/svg%3E") no-repeat right center;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23161513' fill='none'/%3E%3C/svg%3E")
+    no-repeat right center;
   padding: 0.5rem 1.4rem 0.5rem 0.2rem;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -275,7 +296,9 @@ textarea.input {
   border-radius: var(--radius);
   overflow: hidden;
   opacity: 0.55;
-  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
   padding: 0;
 }
 
@@ -658,7 +681,9 @@ textarea.input {
   text-transform: uppercase;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
-  transition: color 0.3s ease, padding-left 0.3s ease;
+  transition:
+    color 0.3s ease,
+    padding-left 0.3s ease;
 }
 
 .account-nav button:hover,
@@ -944,7 +969,12 @@ textarea.input {
 
 .kids-hero-overlay {
   background:
-    linear-gradient(90deg, rgba(15, 14, 13, 0.56) 0%, rgba(15, 14, 13, 0.3) 54%, rgba(15, 14, 13, 0.08) 80%),
+    linear-gradient(
+      90deg,
+      rgba(15, 14, 13, 0.56) 0%,
+      rgba(15, 14, 13, 0.3) 54%,
+      rgba(15, 14, 13, 0.08) 80%
+    ),
     linear-gradient(0deg, rgba(15, 14, 13, 0.32) 0%, transparent 42%);
 }
 
@@ -999,26 +1029,6 @@ textarea.input {
   max-width: 56ch;
 }
 
-.kids-nav {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  padding-block: 2.2rem;
-}
-
-.kids-section {
-  padding-block: clamp(3.5rem, 7vw, 5.5rem);
-  border-top: 1px solid var(--line);
-}
-
-.kids-section:first-of-type {
-  border-top: none;
-}
-
-#kids-dresses,
-#kids-outerwear,
-#kids-shoes-accessories,
 #kids-all {
   scroll-margin-top: 96px;
 }
@@ -1039,11 +1049,4 @@ textarea.input {
   height: 100%;
   object-fit: cover;
   object-position: center 30%;
-}
-
-@media (max-width: 560px) {
-  .kids-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2.4rem 1.2rem;
-  }
 }

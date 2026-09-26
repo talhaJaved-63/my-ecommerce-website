@@ -405,6 +405,8 @@ textarea.input {
 
 .field { display: grid; gap: 0.35rem; }
 
+.field[hidden] { display: none; }
+
 .field label {
   font-size: 0.62rem;
   letter-spacing: 0.22em;

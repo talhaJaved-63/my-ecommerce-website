@@ -380,6 +380,13 @@
         .concat(categories.map((c) => `<option value="${c.id}" ${p?.categoryId === c.id ? "selected" : ""}>${esc(c.name)}</option>`))
         .join("");
 
+    const kidsCatSlugs = ["dresses", "outerwear", "shoes-accessories"];
+    const kidsCats = kidsCatSlugs.map((s) => categories.find((c) => c.slug === s)).filter(Boolean);
+    const kidsCatOpts =
+      [`<option value="">— Select a Kids category —</option>`]
+        .concat(kidsCats.map((c) => `<option value="${c.id}" ${p?.categoryId === c.id ? "selected" : ""}>${esc(c.name)}</option>`))
+        .join("");
+
     const badges = ["New", "Trending", "Best Seller", "Limited"];
 
     const formHTML = `
@@ -408,6 +415,11 @@
           <select class="select" id="p-dept">
             ${["unisex", "women", "men", "kids"].map((d) => `<option ${p?.dept === d ? "selected" : ""}>${d}</option>`).join("")}
           </select>
+        </div>
+        <div class="field" id="p-kids-cat-field" hidden>
+          <label for="p-kids-cat">Kids Category *</label>
+          <select class="select" id="p-kids-cat">${kidsCatOpts}</select>
+          <span class="field-hint">Saved as the product category (dresses · outerwear · shoes-accessories). Kids products only appear under the matching filter on the Kids page.</span>
         </div>
         <div class="field">
           <label for="p-badge">Badge</label>
@@ -478,6 +490,34 @@
       </form>`;
 
     openModal(isEdit ? `Edit — ${p.name}` : "Add Product", formHTML);
+
+    // Kids products choose their category through a dedicated "Kids Category"
+    // select. Both selects write to the SAME existing category_id field — no
+    // new database column. The generic Category field stays untouched for
+    // Women / Men / Unisex products.
+    const pDept = $("#p-dept");
+    const pCat = $("#p-cat");
+    const pCatField = pCat.closest(".field");
+    const kidsField = $("#p-kids-cat-field");
+    const kidsCat = $("#p-kids-cat");
+
+    const syncKidsCategory = () => {
+      const isKids = pDept.value === "kids";
+      kidsField.hidden = !isKids;
+      pCatField.hidden = isKids;
+      if (isKids) {
+        const currentIsKidsCat = kidsCats.some((c) => String(c.id) === pCat.value);
+        kidsCat.value = currentIsKidsCat ? pCat.value : "";
+      } else if (kidsCat.value) {
+        pCat.value = kidsCat.value;
+      }
+    };
+
+    pDept.addEventListener("change", syncKidsCategory);
+    kidsCat.addEventListener("change", () => {
+      pCat.value = kidsCat.value;
+    });
+    syncKidsCategory();
 
     // Keep the colors[] state array in lockstep with what the admin has typed
     // BEFORE any re-render, otherwise typed values would be wiped by rebuilds.
@@ -757,6 +797,9 @@
       const salePriceCents = saleRaw === "" ? null : cents(saleRaw);
       if (salePriceCents != null && plainPrice && !(salePriceCents < priceCents))
         return (msg.textContent = "Sale price must be lower than the regular price.");
+
+      if ($("#p-dept").value === "kids" && !kidsCats.some((c) => String(c.id) === $("#p-cat").value))
+        return (msg.textContent = "Please select a Kids Category (Dresses, Outerwear or Shoes & Accessories) for Kids products.");
 
       syncColors();
 

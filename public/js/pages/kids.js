@@ -1,19 +1,13 @@
 (async () => {
   await MV.bootPromise;
 
-  const grids = {
-    dresses: document.querySelector('.kids-grid[data-cat="dresses"]'),
-    outerwear: document.querySelector('.kids-grid[data-cat="outerwear"]'),
-    "shoes-accessories": document.querySelector('.kids-grid[data-cat="shoes-accessories"]'),
-  };
-  const sections = {
-    dresses: document.getElementById("kids-dresses"),
-    outerwear: document.getElementById("kids-outerwear"),
-    "shoes-accessories": document.getElementById("kids-shoes-accessories"),
-  };
   const allGrid = document.getElementById("kids-all-grid");
+  const filterEl = document.getElementById("kids-filter");
+  const filterBtns = filterEl ? [...filterEl.querySelectorAll("[data-kids-filter]")] : [];
 
   let products = [];
+  let activeFilter = "all";
+
   try {
     const data = await MV.api.get("/api/products?dept=kids&limit=60");
     products = data.products;
@@ -22,18 +16,28 @@
     return;
   }
 
-  for (const [key, grid] of Object.entries(grids)) {
-    const section = sections[key];
-    const items = products.filter((p) => p.category?.slug === key);
-    if (!grid || !section) continue;
-    if (!items.length) {
-      section.hidden = true;
-      continue;
+  const renderAllGrid = () => {
+    if (!products.length) {
+      allGrid.innerHTML = `<p class="grid-empty">The kids collection is being curated. Please check back shortly.</p>`;
+      return;
     }
-    MV.renderGrid(grid, items);
-  }
+    const items =
+      activeFilter === "all"
+        ? products
+        : products.filter((p) => p.category?.slug === activeFilter);
+    if (items.length) MV.renderGrid(allGrid, items);
+    else allGrid.innerHTML = `<p class="grid-empty">No Kids products found in this category.</p>`;
+  };
 
-  if (!products.length)
-    allGrid.innerHTML = `<p class="grid-empty">The kids collection is being curated. Please check back shortly.</p>`;
-  else MV.renderGrid(allGrid, products);
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const value = btn.dataset.kidsFilter;
+      if (value === activeFilter) return;
+      activeFilter = value;
+      filterBtns.forEach((b) => b.classList.toggle("on", b === btn));
+      renderAllGrid();
+    });
+  });
+
+  renderAllGrid();
 })();
